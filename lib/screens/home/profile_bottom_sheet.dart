@@ -7,16 +7,17 @@ import 'package:image_picker/image_picker.dart';
 import '../../main.dart';
 import '../../models/profile_model.dart';
 import '../../services/supabase_service.dart';
-import '../../utils/app_routes.dart';
 
-class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+class ProfileBottomSheet extends StatefulWidget {
+  final VoidCallback onProfileUpdated;
+
+  const ProfileBottomSheet({super.key, required this.onProfileUpdated});
 
   @override
-  State<ProfileScreen> createState() => _ProfileScreenState();
+  State<ProfileBottomSheet> createState() => _ProfileBottomSheetState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> {
+class _ProfileBottomSheetState extends State<ProfileBottomSheet> {
   final SupabaseService _supabaseService = SupabaseService();
   Profile? _profile;
   bool _isLoading = true;
@@ -111,7 +112,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       );
 
       if (mounted) {
-        Get.offAllNamed(AppRoutes.home);
+        Navigator.pop(context); // Tutup bottom sheet
+        widget.onProfileUpdated(); // Trigger callback
       }
     } catch (e) {
       if (mounted) {
@@ -147,75 +149,79 @@ class _ProfileScreenState extends State<ProfileScreen> {
       avatarPreview = NetworkImage(_profile!.avatarUrl!);
     }
 
-    return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        centerTitle: true,
-        title: const Text('Profil Saya'),
-        backgroundColor: const Color.fromARGB(255, 255, 255, 255),
+    return Container(
+      constraints: const BoxConstraints(
+        maxHeight: 500, // ✅ Batasi tinggi agar tidak terlalu besar
       ),
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color.fromARGB(255, 255, 255, 255),Color.fromARGB(255, 255, 255, 255), Colors.white],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
-        child: _isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : _profile == null
-                ? const Center(child: Text('Gagal memuat profil.'))
-                : SafeArea(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        children: [
-                          GestureDetector(
-                            onTap: _pickAvatar,
-                            child: CircleAvatar(
-                              radius: 60,
-                              backgroundImage: avatarPreview,
-                              backgroundColor: Colors.grey[300],
-                              child: avatarPreview == null
-                                  ? const Icon(Icons.person, size: 60)
-                                  : null,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          TextButton.icon(
-                            onPressed: _pickAvatar,
-                            icon: const Icon(Icons.camera_alt),
-                            label: const Text('Ganti Avatar'),
-                          ),
-                          const SizedBox(height: 20),
-                          TextField(
-                            controller: _usernameController,
-                            decoration: const InputDecoration(
-                              labelText: 'Username',
-                              border: OutlineInputBorder(),
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                          SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton.icon(
-                              onPressed: _updateProfile,
-                              icon: const Icon(Icons.save),
-                              label: const Text('Simpan Perubahan'),
-                              style: ElevatedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(vertical: 12),
-                              ),
-                            ),
-                          ),
-                        ],
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SafeArea(
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.close),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                        const Spacer(),
+                        const Text(
+                          'Profil Saya',
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
+                        const Spacer(),
+                        const SizedBox(width: 48), // spacer untuk sejajar dengan tombol
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    GestureDetector(
+                      onTap: _pickAvatar,
+                      child: CircleAvatar(
+                        radius: 50,
+                        backgroundImage: avatarPreview,
+                        backgroundColor: Colors.grey[300],
+                        child: avatarPreview == null
+                            ? const Icon(Icons.person, size: 50)
+                            : null,
                       ),
                     ),
-                  ),
-      ),
+                    const SizedBox(height: 8),
+                    TextButton.icon(
+                      onPressed: _pickAvatar,
+                      icon: const Icon(Icons.camera_alt),
+                      label: const Text('Ganti Avatar'),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: _usernameController,
+                      decoration: const InputDecoration(
+                        labelText: 'Username',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: _updateProfile,
+                        icon: const Icon(Icons.save),
+                        label: const Text('Simpan Perubahan'),
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
     );
   }
 }

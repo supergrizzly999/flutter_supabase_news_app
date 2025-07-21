@@ -1,4 +1,4 @@
-package com.example.flutter_supabase_notes_app
+package com.beritaterkini.newsberitaterkini
 
 import io.flutter.embedding.android.FlutterActivity
 
